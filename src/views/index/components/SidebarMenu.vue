@@ -11,21 +11,30 @@ export default {
   components: { MenuItem },
   data() {
     return {
-      menuRoutes: []
+      // menuRoutes: []
     };
   },
   computed: {
     activeMenu() {
       return this.$route.path;
     },
+    menuRoutes() {
+      if (getToken()) {
+        return this.$store.getters.menuList.filter(v => v.meta.menu)
+      } else {
+        return this.$store.getters.menuList.filter(v => v.meta.menu && !v.meta.isLogin)
+      }
+    }
+
   },
   mounted() {
-    console.log(getToken());
-    if (getToken()) {
-      this.menuRoutes = this.$router.options.routes[0].children[0].children.filter(v => v.meta.menu)
-    } else {
-      this.menuRoutes = this.$router.options.routes[0].children[0].children.filter(v => v.meta.menu && !v.meta.isLogin)
-    }
+    // const isAdmin = this.$store.getters.isAdmin
+    // console.log(isAdmin);
+    // if (getToken()) {
+    //   this.menuRoutes = this.$router.options.routes[0].children[0].children.filter(v => v.meta.menu)
+    // } else {
+    //   this.menuRoutes = this.$router.options.routes[0].children[0].children.filter(v => v.meta.menu && !v.meta.isLogin)
+    // }
   }
 };
 </script>

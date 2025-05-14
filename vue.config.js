@@ -9,7 +9,7 @@ const CompressionPlugin = require('compression-webpack-plugin')
 
 const name = process.env.VUE_APP_TITLE || '阔跃生物云平台' // 网页标题
 
-const port = process.env.port || process.env.npm_config_port || 80 // 端口
+const port = '1025'
 
 const ScriptSetup = require("unplugin-vue2-script-setup/webpack").default;
 

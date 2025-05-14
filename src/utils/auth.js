@@ -19,9 +19,9 @@ export function setToken(accessToken, refreshToken) {
 
 
 export const handleLoginGetInfo = () => {
-  if (getToken()) {
-    store.dispatch('GetInfo')
-  }
+  // if (getToken()) {
+  //   store.dispatch('GetInfo')
+  // }
 }
 export function removeToken() {
   window.localStorage.removeItem('accessToken');

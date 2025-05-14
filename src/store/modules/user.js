@@ -3,12 +3,14 @@ import { getInfo, login, logout, smsLogin, getIpLocationApi } from '@/api/login'
 import { getToken, removeToken, setToken } from '@/utils/auth'
 import { myMemberInfo } from "@/api/user/member";
 import router from '@/router';
+import { commonRoutes, adminRoutes, constantRoutes } from '@/router';
 const user = {
   state: {
     token: getToken(),
     userInfo: undefined,
     isLogin: false,
     isAdmin: false,
+    menuList: [],
   },
 
   mutations: {
@@ -29,7 +31,9 @@ const user = {
       state.isLogin = false
       state.token = ''
     },
-
+    SET_MENU_LIST: (state, menuList) => {
+      state.menuList = menuList
+    }
   },
 
   actions: {
@@ -66,10 +70,22 @@ const user = {
           let user = res.user
           commit('USER_INFO', user)
           commit('SET_ROLES', res.roles)
+          const arr = res.roles.includes('admin') ? adminRoutes : commonRoutes
+          router.addRoutes([arr]);
+          commit('SET_MENU_LIST', arr.children[0].children)
           resolve(res)
         }).catch(error => {
           reject(error)
         })
+      })
+    },
+    SetCommonRouter({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        const arr = commonRoutes
+        router.addRoutes([arr]);
+        console.log('arr.children[0].children', [arr]);
+
+        commit('SET_MENU_LIST', arr.children[0].children)
       })
     },
 
