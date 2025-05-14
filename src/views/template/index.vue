@@ -4,13 +4,11 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="模板标题">
-          <el-input v-model="searchForm.title" placeholder="请输入模板标题"></el-input>
+          <el-input v-model="searchForm.templateTitle" placeholder="请输入模板标题"></el-input>
         </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="searchForm.category" placeholder="请选择分类">
-            <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value">
-            </el-option>
-          </el-select>
+          <el-input v-model="searchForm.category" placeholder="请输入分类"></el-input>
+
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -22,30 +20,32 @@
 
     <!-- 表格数据 -->
     <el-card class="table-card">
-      <el-table :data="tableData" border style="width: 100%" v-loading="loading">
-        <el-table-column prop="title" label="模板标题" width="180">
+      <el-table :data="tableData" v-loading="loading" size="mini">
+        <el-table-column prop="templateTitle" label="模板标题" width="180">
         </el-table-column>
-        <el-table-column prop="fileName" label="模版文件名称" width="180">
+        <el-table-column prop="templateFilename" label="模版文件名称" width="180">
         </el-table-column>
-        <el-table-column prop="filePath" label="模板文件路径">
+        <el-table-column prop="templatePath" label="模板文件路径">
         </el-table-column>
-        <el-table-column prop="coverPath" label="模板封面路径">
+        <el-table-column prop="templateImage" label="模板封面路径">
         </el-table-column>
-        <el-table-column prop="rootDir" label="模板文件根目录">
+        <el-table-column prop="templateRootPath" label="模板文件根目录" width="120">
         </el-table-column>
         <el-table-column prop="category" label="标签分类">
         </el-table-column>
+        <el-table-column prop="tags" label="标签">
+        </el-table-column>
         <el-table-column prop="kernelName" label="内核名称">
         </el-table-column>
-        <el-table-column prop="creator" label="创建人">
+        <el-table-column prop="createName" label="创建人">
         </el-table-column>
-        <el-table-column prop="updater" label="更新人">
+        <el-table-column prop="updateName" label="更新人">
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180">
+        <el-table-column prop="createdAt" label="创建时间">
         </el-table-column>
-        <el-table-column prop="updateTime" label="更新时间" width="180">
+        <el-table-column prop="updatedAt" label="更新时间">
         </el-table-column>
-        <el-table-column label="操作" width="180">
+        <el-table-column label="操作" width="150">
           <template slot-scope="scope">
             <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
             <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
@@ -54,40 +54,47 @@
       </el-table>
 
       <!-- 分页 -->
-      <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="pagination.currentPage" :page-sizes="[10, 20, 50, 100]" :page-size="pagination.pageSize"
+      <!-- <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="pagination.currentPage" :page-sizes="[10, 20, 50, 100]" :page-size="pagination.pageSize"
         layout="total, sizes, prev, pager, next, jumper" :total="pagination.total" class="pagination">
-      </el-pagination>
+      </el-pagination> -->
     </el-card>
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="50%">
       <el-form :model="form" :rules="rules" ref="form" label-width="150px">
-        <el-form-item label="模板标题" prop="title">
-          <el-input v-model="form.title"></el-input>
+        <el-form-item label="模板标题" prop="templateTitle">
+          <el-input v-model="form.templateTitle"></el-input>
         </el-form-item>
-        <el-form-item label="模版文件名称" prop="fileName">
-          <el-input v-model="form.fileName"></el-input>
+        <el-form-item label="模版文件名称" prop="templateFilename">
+          <el-input v-model="form.templateFilename"></el-input>
         </el-form-item>
-        <el-form-item label="模板文件路径" prop="filePath">
-          <el-input v-model="form.filePath"></el-input>
+        <el-form-item label="模板文件路径" prop="templatePath">
+          <el-input v-model="form.templatePath"></el-input>
         </el-form-item>
-        <el-form-item label="模板封面路径" prop="coverPath">
-          <el-input v-model="form.coverPath"></el-input>
+        <el-form-item label="模板封面路径" prop="templateImage">
+          <el-input v-model="form.templateImage"></el-input>
         </el-form-item>
-        <el-form-item label="模板文件根目录" prop="rootDir">
-          <el-input v-model="form.rootDir"></el-input>
+        <el-form-item label="模板文件根目录" prop="templateRootPath">
+          <el-input v-model="form.templateRootPath"></el-input>
         </el-form-item>
         <el-form-item label="标签分类" prop="category">
-          <el-select v-model="form.category" placeholder="请选择标签分类">
-            <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value">
-            </el-option>
-          </el-select>
+          <el-input v-model="form.category"></el-input>
+        </el-form-item>
+        <el-form-item label="标签" prop="tags">
+          <el-input v-model="form.tags" placeholder="多个标签用分号分隔"></el-input>
         </el-form-item>
         <el-form-item label="内核名称" prop="kernelName">
           <el-input v-model="form.kernelName"></el-input>
         </el-form-item>
-        <el-form-item label="上传附件">
-          <el-upload class="upload-demo" action="/api/upload" :on-success="handleUploadSuccess" :before-upload="beforeUpload" :limit="1" :file-list="fileList">
+        <el-form-item label="容器资源配置" prop="containerResourceProfileId">
+          <el-select v-model="form.containerResourceProfileId" placeholder="请选择容器资源配置">
+            <el-option v-for="item in resourceProfileOptions" :key="item.id" :label="item.name" :value="item.id.toString()">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="上传模板文件">
+          <el-upload class="upload-demo" :action="isEdit ? '/api/v1/admin/scriptTemplate/edit' : '/api/v1/admin/scriptTemplate/add'" :on-success="handleUploadSuccess" :before-upload="beforeUpload"
+            :limit="1" :file-list="fileList" :data="uploadParams" ref="upload" :http-request="customUploadRequest">
             <el-button size="small" type="primary">点击上传</el-button>
             <div slot="tip" class="el-upload__tip">只能上传zip/rar文件，且不超过10MB</div>
           </el-upload>
@@ -102,21 +109,21 @@
 </template>
 
 <script>
-import axios from 'axios';
 
 export default {
   name: 'TemplateManagement',
   data() {
     return {
       searchForm: {
-        title: '',
+        templateTitle: '',
         category: ''
       },
       categoryOptions: [
-        { value: '1', label: '分类1' },
-        { value: '2', label: '分类2' },
-        { value: '3', label: '分类3' }
+        { value: '分类1', label: '分类1' },
+        { value: '分类2', label: '分类2' },
+        { value: '分类3', label: '分类3' }
       ],
+      resourceProfileOptions: [],
       tableData: [],
       loading: false,
       pagination: {
@@ -128,20 +135,21 @@ export default {
       dialogTitle: '新增模板',
       form: {
         id: '',
-        title: '',
-        fileName: '',
-        filePath: '',
-        coverPath: '',
-        rootDir: '',
+        templateTitle: '',
+        templateFilename: '',
+        templatePath: '',
+        templateImage: '',
+        templateRootPath: '',
         category: '',
+        tags: '',
         kernelName: '',
-        attachment: ''
+        containerResourceProfileId: ''
       },
       rules: {
-        title: [
+        templateTitle: [
           { required: true, message: '请输入模板标题', trigger: 'blur' }
         ],
-        fileName: [
+        templateFilename: [
           { required: true, message: '请输入模版文件名称', trigger: 'blur' }
         ],
         category: [
@@ -149,11 +157,29 @@ export default {
         ]
       },
       fileList: [],
-      isEdit: false
+      isEdit: false,
+      formFile: null
     };
+  },
+  computed: {
+    uploadParams() {
+      return {
+        id: this.form.id,
+        templateTitle: this.form.templateTitle,
+        templateFilename: this.form.templateFilename,
+        templatePath: this.form.templatePath,
+        templateImage: this.form.templateImage,
+        templateRootPath: this.form.templateRootPath,
+        tags: this.form.tags,
+        category: this.form.category,
+        kernelName: this.form.kernelName,
+        containerResourceProfileId: this.form.containerResourceProfileId
+      };
+    }
   },
   created() {
     this.fetchData();
+    this.fetchResourceProfiles();
   },
   methods: {
     // 获取表格数据
@@ -162,20 +188,41 @@ export default {
       const params = {
         pageNum: this.pagination.currentPage,
         pageSize: this.pagination.pageSize,
-        ...this.searchForm
+        category: this.searchForm.category,
+        templateTitle: this.searchForm.templateTitle
       };
 
-      axios.get('/api/templates', { params })
+      this.http.post('/api/v1/admin/scriptTemplate/pageList', params)
         .then(response => {
-          const data = response.data;
-          this.tableData = data.list;
-          this.pagination.total = data.total;
+          if (response.code === 200) {
+            this.tableData = response.data
+            this.pagination.total = response.data.length;
+          } else {
+            this.$message.error(response.msg || '获取数据失败');
+          }
           this.loading = false;
         })
         .catch(error => {
           console.error('获取数据失败:', error);
           this.loading = false;
           this.$message.error('获取数据失败');
+        });
+    },
+
+    // 获取容器资源配置列表
+    fetchResourceProfiles() {
+      this.http.get('/api/v1/admin/scriptTemplate/getContainerResourceProfileList')
+        .then(response => {
+          const data = response;
+          if (data.code === 200) {
+            this.resourceProfileOptions = data.data;
+          } else {
+            this.$message.error(data.msg || '获取容器资源配置失败');
+          }
+        })
+        .catch(error => {
+          console.error('获取容器资源配置失败:', error);
+          this.$message.error('获取容器资源配置失败');
         });
     },
 
@@ -188,7 +235,7 @@ export default {
     // 重置查询条件
     resetSearch() {
       this.searchForm = {
-        title: '',
+        templateTitle: '',
         category: ''
       };
       this.handleSearch();
@@ -200,16 +247,18 @@ export default {
       this.isEdit = false;
       this.form = {
         id: '',
-        title: '',
-        fileName: '',
-        filePath: '',
-        coverPath: '',
-        rootDir: '',
+        templateTitle: '',
+        templateFilename: '',
+        templatePath: '',
+        templateImage: '',
+        templateRootPath: '',
         category: '',
+        tags: '',
         kernelName: '',
-        attachment: ''
+        containerResourceProfileId: ''
       };
       this.fileList = [];
+      this.formFile = null;
       this.dialogVisible = true;
       this.$nextTick(() => {
         this.$refs.form.clearValidate();
@@ -222,20 +271,21 @@ export default {
       this.isEdit = true;
       this.form = {
         id: row.id,
-        title: row.title,
-        fileName: row.fileName,
-        filePath: row.filePath,
-        coverPath: row.coverPath,
-        rootDir: row.rootDir,
+        templateTitle: row.templateTitle,
+        templateFilename: row.templateFilename,
+        templatePath: row.templatePath,
+        templateImage: row.templateImage,
+        templateRootPath: row.templateRootPath,
         category: row.category,
+        tags: row.tags,
         kernelName: row.kernelName,
-        attachment: row.attachment
+        containerResourceProfileId: row.containerResourceProfileId
       };
-      if (row.attachment) {
-        this.fileList = [{ name: row.attachment }];
-      } else {
-        this.fileList = [];
-      }
+      this.fileList = [{
+        name: row.templateFilename,
+        url: row.templatePath
+      }];
+      this.formFile = null;
       this.dialogVisible = true;
       this.$nextTick(() => {
         this.$refs.form.clearValidate();
@@ -249,10 +299,15 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        axios.delete(`/api/templates/${row.id}`)
+        this.http.get(`/api/v1/admin/scriptTemplate/delete?id=${row.id}`)
           .then(response => {
-            this.$message.success('删除成功');
-            this.fetchData();
+            const data = response;
+            if (data.code === 200) {
+              this.$message.success('删除成功');
+              this.fetchData();
+            } else {
+              this.$message.error(data.msg || '删除失败');
+            }
           })
           .catch(error => {
             console.error('删除失败:', error);
@@ -275,17 +330,10 @@ export default {
       this.fetchData();
     },
 
-    // 上传成功回调
-    handleUploadSuccess(response, file, fileList) {
-      this.form.attachment = response.data.filePath;
-      this.fileList = fileList;
-      this.$message.success('上传成功');
-    },
-
-    // 上传前校验
+    // 保存文件引用
     beforeUpload(file) {
       const isLt10M = file.size / 1024 / 1024 < 10;
-      const isZipOrRar = file.type === 'application/zip' || file.type === 'application/x-rar-compressed';
+      const isZipOrRar = file.name.endsWith('.zip') || file.name.endsWith('.rar');
 
       if (!isZipOrRar) {
         this.$message.error('只能上传zip/rar文件');
@@ -295,26 +343,86 @@ export default {
         this.$message.error('上传文件大小不能超过10MB');
         return false;
       }
+      this.formFile = file;
       return true;
+    },
+
+    // 自定义上传请求
+    customUploadRequest(options) {
+      const { action, file, onSuccess, onError } = options;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // 添加其他表单参数
+      for (const key in this.uploadParams) {
+        if (this.uploadParams[key]) {
+          formData.append(key, this.uploadParams[key]);
+        }
+      }
+
+      this.http.post(action, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then(response => {
+        onSuccess(response.data);
+        this.formFile = null; // 重置文件引用
+      }).catch(error => {
+        onError(error);
+      });
+    },
+
+    // 上传成功回调
+    handleUploadSuccess(response) {
+      if (response.code === 200) {
+        this.$message.success('上传成功');
+        this.dialogVisible = false;
+        this.fetchData();
+      } else {
+        this.$message.error(response.msg || '上传失败');
+      }
     },
 
     // 提交表单
     submitForm() {
       this.$refs.form.validate(valid => {
         if (valid) {
-          const api = this.isEdit ?
-            axios.put(`/api/templates/${this.form.id}`, this.form) :
-            axios.post('/api/templates', this.form);
+          if (!this.formFile && !this.isEdit) {
+            this.$message.warning('请先上传模板文件');
+            return;
+          }
 
-          api.then(response => {
-            this.$message.success(this.isEdit ? '编辑成功' : '新增成功');
-            this.dialogVisible = false;
-            this.fetchData();
-          })
-            .catch(error => {
+          if (this.formFile) {
+            // 触发上传操作
+            this.$refs.upload.submit();
+          } else {
+            // 编辑时可能不上传新文件，直接提交表单数据
+            const url = this.isEdit ? '/api/v1/admin/scriptTemplate/edit' : '/api/v1/admin/scriptTemplate/add';
+            const formData = new FormData();
+            for (const key in this.uploadParams) {
+              if (this.uploadParams[key]) {
+                formData.append(key, this.uploadParams[key]);
+              }
+            }
+
+            this.http.post(url, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            }).then(response => {
+              if (response.code === 200) {
+                this.$message.success(this.isEdit ? '编辑成功' : '新增成功');
+                this.dialogVisible = false;
+                this.fetchData();
+              } else {
+                this.$message.error(response.msg || '操作失败');
+              }
+            }).catch(error => {
               console.error('操作失败:', error);
               this.$message.error('操作失败');
             });
+          }
         } else {
           return false;
         }
