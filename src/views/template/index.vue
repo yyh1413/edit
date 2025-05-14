@@ -60,7 +60,7 @@
     </el-card>
 
     <!-- 新增/编辑弹窗 -->
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="50%">
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="50%" @closed="handleDialogClose">
       <el-form :model="form" :rules="rules" ref="form" label-width="150px">
         <el-form-item label="模板标题" prop="templateTitle">
           <el-input v-model="form.templateTitle"></el-input>
@@ -93,9 +93,15 @@
           </el-select>
         </el-form-item>
         <el-form-item label="上传模板文件">
-          <el-upload class="upload-demo" :action="isEdit ? '/api/v1/admin/scriptTemplate/edit' : '/api/v1/admin/scriptTemplate/add'" :on-success="handleUploadSuccess" :before-upload="beforeUpload"
-            :limit="1" :file-list="fileList" :data="uploadParams" ref="upload" :http-request="customUploadRequest">
-            <el-button size="small" type="primary">点击上传</el-button>
+          <el-upload class="upload-demo" 
+                   action="#"
+                   :auto-upload="false"
+                   :on-change="handleFileChange"
+                   :before-upload="beforeUpload"
+                   :limit="1" 
+                   :file-list="fileList" 
+                   ref="upload">
+            <el-button size="small" type="primary">选择文件</el-button>
             <div slot="tip" class="el-upload__tip">只能上传zip/rar文件，且不超过10MB</div>
           </el-upload>
         </el-form-item>
@@ -160,22 +166,6 @@ export default {
       isEdit: false,
       formFile: null
     };
-  },
-  computed: {
-    uploadParams() {
-      return {
-        id: this.form.id,
-        templateTitle: this.form.templateTitle,
-        templateFilename: this.form.templateFilename,
-        templatePath: this.form.templatePath,
-        templateImage: this.form.templateImage,
-        templateRootPath: this.form.templateRootPath,
-        tags: this.form.tags,
-        category: this.form.category,
-        kernelName: this.form.kernelName,
-        containerResourceProfileId: this.form.containerResourceProfileId
-      };
-    }
   },
   created() {
     this.fetchData();
@@ -330,7 +320,14 @@ export default {
       this.fetchData();
     },
 
-    // 保存文件引用
+    // 文件选择变化
+    handleFileChange(file) {
+      this.formFile = file.raw;
+      // 返回false阻止自动上传
+      return false;
+    },
+
+    // 验证文件
     beforeUpload(file) {
       const isLt10M = file.size / 1024 / 1024 < 10;
       const isZipOrRar = file.name.endsWith('.zip') || file.name.endsWith('.rar');
@@ -343,45 +340,7 @@ export default {
         this.$message.error('上传文件大小不能超过10MB');
         return false;
       }
-      this.formFile = file;
       return true;
-    },
-
-    // 自定义上传请求
-    customUploadRequest(options) {
-      const { action, file, onSuccess, onError } = options;
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // 添加其他表单参数
-      for (const key in this.uploadParams) {
-        if (this.uploadParams[key]) {
-          formData.append(key, this.uploadParams[key]);
-        }
-      }
-
-      this.http.post(action, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }).then(response => {
-        onSuccess(response.data);
-        this.formFile = null; // 重置文件引用
-      }).catch(error => {
-        onError(error);
-      });
-    },
-
-    // 上传成功回调
-    handleUploadSuccess(response) {
-      if (response.code === 200) {
-        this.$message.success('上传成功');
-        this.dialogVisible = false;
-        this.fetchData();
-      } else {
-        this.$message.error(response.msg || '上传失败');
-      }
     },
 
     // 提交表单
@@ -389,44 +348,57 @@ export default {
       this.$refs.form.validate(valid => {
         if (valid) {
           if (!this.formFile && !this.isEdit) {
-            this.$message.warning('请先上传模板文件');
+            this.$message.warning('请先选择模板文件');
             return;
           }
 
+          // 创建FormData对象
+          const formData = new FormData();
+          // 添加表单字段
+          formData.append('id', this.form.id || '');
+          formData.append('templateTitle', this.form.templateTitle || '');
+          formData.append('templateFilename', this.form.templateFilename || '');
+          formData.append('templatePath', this.form.templatePath || '');
+          formData.append('templateImage', this.form.templateImage || '');
+          formData.append('templateRootPath', this.form.templateRootPath || '');
+          formData.append('category', this.form.category || '');
+          formData.append('tags', this.form.tags || '');
+          formData.append('kernelName', this.form.kernelName || '');
+          formData.append('containerResourceProfileId', this.form.containerResourceProfileId || '');
+          
+          // 添加文件（如果有）
           if (this.formFile) {
-            // 触发上传操作
-            this.$refs.upload.submit();
-          } else {
-            // 编辑时可能不上传新文件，直接提交表单数据
-            const url = this.isEdit ? '/api/v1/admin/scriptTemplate/edit' : '/api/v1/admin/scriptTemplate/add';
-            const formData = new FormData();
-            for (const key in this.uploadParams) {
-              if (this.uploadParams[key]) {
-                formData.append(key, this.uploadParams[key]);
-              }
-            }
-
-            this.http.post(url, formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
-            }).then(response => {
-              if (response.code === 200) {
-                this.$message.success(this.isEdit ? '编辑成功' : '新增成功');
-                this.dialogVisible = false;
-                this.fetchData();
-              } else {
-                this.$message.error(response.msg || '操作失败');
-              }
-            }).catch(error => {
-              console.error('操作失败:', error);
-              this.$message.error('操作失败');
-            });
+            formData.append('file', this.formFile);
           }
+
+          // 发送请求
+          const url = this.isEdit ? '/api/v1/admin/scriptTemplate/edit' : '/api/v1/admin/scriptTemplate/add';
+          this.http.post(url, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }).then(response => {
+            if (response.code === 200) {
+              this.$message.success(this.isEdit ? '编辑成功' : '新增成功');
+              this.dialogVisible = false;
+              this.fetchData();
+            } else {
+              this.$message.error(response.msg || '操作失败');
+            }
+          }).catch(error => {
+            console.error('操作失败:', error);
+            this.$message.error('操作失败');
+          });
         } else {
           return false;
         }
       });
+    },
+
+    // 处理对话框关闭
+    handleDialogClose() {
+      this.formFile = null;
+      this.fileList = [];
     }
   }
 };
