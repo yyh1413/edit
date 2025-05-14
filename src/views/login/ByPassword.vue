@@ -81,7 +81,7 @@ export default {
             .then(() => {
               this.loading = false;
               handleLoginGetInfo();
-              this.$router.push({ path: this.redirect || "/" })
+              this.$router.push({ path: "/" })
             })
             .catch(() => {
               this.getCode();

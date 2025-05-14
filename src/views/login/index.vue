@@ -24,6 +24,7 @@
 
 <script>
 import ComFooter from '@/components/Footer'
+import { resetRouter } from '@/utils/auth'
 
 import ByCode from './ByCode'
 import ByPassword from './ByPassword'
@@ -40,17 +41,17 @@ export default {
   },
   mounted() {
     localStorage.clear('isad')
+    resetRouter()
   },
   methods: {
     goRegister() {
       this.$router.push("/register");
     },
-   
+
   }
 }
 </script>
 <style lang="scss" scoped>
-
 .wrap-login {
   background: #F5F6FA;
   min-height: 100vh;

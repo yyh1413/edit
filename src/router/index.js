@@ -2,13 +2,15 @@ import Vue from "vue";
 import Router from "vue-router";
 /* Layout */
 import Layout from "@/layout";
+// src/utils/resetRouter.js
+
 
 // 子页面路由组件
 
 Vue.use(Router);
 
 export const commonRoutes = {
-  path: "",
+  path: "/",
   component: Layout,
   redirect: "/",
   children: [
@@ -57,16 +59,16 @@ export const commonRoutes = {
 }
 
 export const adminRoutes = {
-  path: "",
+  path: "/",
   component: Layout,
-  redirect: "/",
+  redirect: "/template",
   children: [
     {
-      path: "/",
+      path: "/template",
       component: () => import("@/views/index/index"),
       name: "Index",
       children: [{
-        path: "/",
+        path: "/template",
         component: () => import("@/views/template"),
         name: "template-admin",
         meta: { title: "模版管理", icon: "el-icon-s-open", menu: true },
@@ -151,3 +153,4 @@ export default new Router({
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes,
 });
+

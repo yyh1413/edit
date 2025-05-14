@@ -1,9 +1,9 @@
 // import {login, logout, smsLogin} from '@/api/login'
 import { getInfo, login, logout, smsLogin, getIpLocationApi } from '@/api/login'
-import { getToken, removeToken, setToken } from '@/utils/auth'
+import { getToken, removeToken, setToken, resetRouter } from '@/utils/auth'
 import { myMemberInfo } from "@/api/user/member";
 import router from '@/router';
-import { commonRoutes, adminRoutes, constantRoutes } from '@/router';
+import { commonRoutes, adminRoutes } from '@/router';
 const user = {
   state: {
     token: getToken(),
@@ -29,6 +29,7 @@ const user = {
     CLEAR_INFO: (state, token) => {
       state.userInfo = undefined
       state.isLogin = false
+      state.isAdmin = false
       state.token = ''
     },
     SET_MENU_LIST: (state, menuList) => {
@@ -57,6 +58,7 @@ const user = {
           if (res.isSupport) {
             commit('SET_ISSUPPORT', res.isSupport)
           }
+          localStorage.setItem('isreload', false)
           resolve()
         }).catch(error => {
           reject(error)
@@ -64,29 +66,25 @@ const user = {
       })
     },
     // 获取用户信息
-    GetInfo({ commit, state }, flag) {
-      return new Promise((resolve, reject) => {
-        getInfo().then(res => {
-          let user = res.user
-          commit('USER_INFO', user)
-          commit('SET_ROLES', res.roles)
-          const arr = res.roles.includes('admin') ? adminRoutes : commonRoutes
-          router.addRoutes([arr]);
-          commit('SET_MENU_LIST', arr.children[0].children)
-          resolve(res)
-        }).catch(error => {
-          reject(error)
-        })
-      })
-    },
-    SetCommonRouter({ commit, state }) {
-      return new Promise((resolve, reject) => {
-        const arr = commonRoutes
-        router.addRoutes([arr]);
-        console.log('arr.children[0].children', [arr]);
+    GetInfo({ commit }, flag) {
+      return getInfo().then(res => {
+        const user = res.user;
+        commit('USER_INFO', user);
+        commit('SET_ROLES', res.roles);
 
-        commit('SET_MENU_LIST', arr.children[0].children)
-      })
+        const arr = res.roles.includes('admin') ? adminRoutes : commonRoutes;
+        router.addRoutes([arr]);
+        commit('SET_MENU_LIST', arr.children[0].children);
+
+        return res;
+      });
+    },
+
+    SetCommonRouter({ commit }) {
+      const arr = commonRoutes;
+      router.addRoutes([arr]);
+      commit('SET_MENU_LIST', arr.children[0].children);
+      return Promise.resolve();
     },
 
     // 退出系统
@@ -94,6 +92,7 @@ const user = {
       return new Promise((resolve, reject) => {
         commit('CLEAR_INFO')
         removeToken()
+        resetRouter()
         router.push({ path: '/login' })
         // logout(state.token).then(() => {
         //   commit('CLEAR_INFO')

@@ -2,6 +2,7 @@ import router from './router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import store from '@/store'
+
 let hasRoutes = false;
 
 NProgress.configure({ showSpinner: false })
@@ -13,49 +14,39 @@ const whiteList = [
   '/404',
   '/agreement',
 ]
+
 router.beforeEach(async (to, from, next) => {
-  // NProgress.start()
+  const token = localStorage.getItem('accessToken');
 
   if (whiteList.includes(to.path)) {
     hasRoutes = false;
-    next()
-  } else {
-    if (!localStorage.getItem('accessToken')) {
-      return next('/login');
-      // hasRoutes = true;
-      // await store.dispatch('SetCommonRouter')
-      // if (!localStorage.getItem('isLogin')) {
-      //   next({ ...to, replace: true }); // ✅ 重新导航，确保路由生效
-      //   window.location.reload();
-      //   localStorage.setItem('isLogin', true)
-      // }
-      // return
-    }
-    next()
-    if (!hasRoutes) {
-      try {
-        const userInfo = await store.dispatch('GetInfo'); // 调接口拿权限信息
-        hasRoutes = true;
-        // ❗ 关键：重新导航一次，才能匹配上刚才 addRoutes 的路由
-        console.log('111');
-        if (!localStorage.getItem('isLogin')) {
-          window.location.reload();
-          localStorage.setItem('isLogin', true)
-
-        }
-        // next({ ...to, replace: true });
-
-      } catch (e) {
-        console.error('权限获取失败', e);
-        return next('/login');
-      }
-    }
-
-
+    return next();
   }
 
-})
+  if (!token) {
+    // 未登录：设置公共路由
+    if (!hasRoutes) {
+      await store.dispatch('SetCommonRouter');
+      hasRoutes = true;
+      return next({ ...to, replace: true }); // 替换跳转，避免历史记录堆叠
+    }
+    return next();
+  }
 
+  // 已登录：添加权限路由
+  if (!hasRoutes) {
+    try {
+      await store.dispatch('GetInfo');
+      hasRoutes = true;
+      return next({ ...to, replace: true }); // 添加完动态路由后重新匹配
+    } catch (e) {
+      console.error('权限获取失败', e);
+      return next('/login');
+    }
+  }
+
+  next();
+});
 // router.afterEach(() => {
 //   NProgress.done()
 // })
