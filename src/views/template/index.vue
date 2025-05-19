@@ -37,6 +37,8 @@
         </el-table-column>
         <el-table-column prop="kernelName" label="内核名称">
         </el-table-column>
+        <el-table-column prop="templateDesc" label="备注">
+        </el-table-column>
         <el-table-column prop="createName" label="创建人">
         </el-table-column>
         <el-table-column prop="updateName" label="更新人">
@@ -60,7 +62,7 @@
     </el-card>
 
     <!-- 新增/编辑弹窗 -->
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="50%" @closed="handleDialogClose">
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="50%" @closed="handleDialogClose" :modal-append-to-body='false' :close-on-click-modal="false">
       <el-form :model="form" :rules="rules" ref="form" label-width="150px">
         <el-form-item label="模板标题" prop="templateTitle">
           <el-input v-model="form.templateTitle"></el-input>
@@ -93,22 +95,18 @@
           </el-select>
         </el-form-item>
         <el-form-item label="上传模板文件">
-          <el-upload class="upload-demo" 
-                   action="#"
-                   :auto-upload="false"
-                   :on-change="handleFileChange"
-                   :before-upload="beforeUpload"
-                   :limit="1" 
-                   :file-list="fileList" 
-                   ref="upload">
+          <el-upload class="upload-demo" action="#" :auto-upload="false" :on-change="handleFileChange" :before-upload="beforeUpload" :limit="1" :file-list="fileList" ref="upload">
             <el-button size="small" type="primary">选择文件</el-button>
             <div slot="tip" class="el-upload__tip">只能上传zip/rar文件，且不超过10MB</div>
           </el-upload>
         </el-form-item>
+        <el-form-item label="备注" prop="templateDesc">
+          <el-input v-model="form.templateDesc"></el-input>
+        </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button type="primary" @click="submitForm" :loading="loading">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -120,6 +118,7 @@ export default {
   name: 'TemplateManagement',
   data() {
     return {
+      loading: false,
       searchForm: {
         templateTitle: '',
         category: ''
@@ -149,7 +148,8 @@ export default {
         category: '',
         tags: '',
         kernelName: '',
-        containerResourceProfileId: ''
+        containerResourceProfileId: '',
+        templateDesc: '',
       },
       rules: {
         templateTitle: [
@@ -158,8 +158,26 @@ export default {
         templateFilename: [
           { required: true, message: '请输入模版文件名称', trigger: 'blur' }
         ],
+        templatePath: [
+          { required: true, message: '请输入模板文件路径', trigger: 'blur' }
+        ],
+        templateImage: [
+          { required: true, message: '请输入模板封面路径', trigger: 'blur' }
+        ],
+        templateRootPath: [
+          { required: true, message: '请输入模板文件根目录', trigger: 'blur' }
+        ],
         category: [
-          { required: true, message: '请选择标签分类', trigger: 'change' }
+          { required: true, message: '请输入标签分类', trigger: 'blur' }
+        ],
+        tags: [
+          { required: true, message: '请输入标签', trigger: 'blur' }
+        ],
+        kernelName: [
+          { required: true, message: '请输入内核名称', trigger: 'blur' }
+        ],
+        containerResourceProfileId: [
+          { required: true, message: '请选择容器资源配置', trigger: 'change' }
         ]
       },
       fileList: [],
@@ -245,7 +263,8 @@ export default {
         category: '',
         tags: '',
         kernelName: '',
-        containerResourceProfileId: ''
+        containerResourceProfileId: '',
+        templateDesc: '',
       };
       this.fileList = [];
       this.formFile = null;
@@ -269,7 +288,8 @@ export default {
         category: row.category,
         tags: row.tags,
         kernelName: row.kernelName,
-        containerResourceProfileId: row.containerResourceProfileId
+        containerResourceProfileId: row.containerResourceProfileId,
+        templateDesc: row.templateDesc
       };
       this.fileList = [{
         name: row.templateFilename,
@@ -351,7 +371,7 @@ export default {
             this.$message.warning('请先选择模板文件');
             return;
           }
-
+          this.loading = true;
           // 创建FormData对象
           const formData = new FormData();
           // 添加表单字段
@@ -363,9 +383,10 @@ export default {
           formData.append('templateRootPath', this.form.templateRootPath || '');
           formData.append('category', this.form.category || '');
           formData.append('tags', this.form.tags || '');
+          formData.append('templateDesc', this.form.templateDesc || '');
           formData.append('kernelName', this.form.kernelName || '');
           formData.append('containerResourceProfileId', this.form.containerResourceProfileId || '');
-          
+
           // 添加文件（如果有）
           if (this.formFile) {
             formData.append('file', this.formFile);
@@ -378,17 +399,13 @@ export default {
               'Content-Type': 'multipart/form-data'
             }
           }).then(response => {
-            if (response.code === 200) {
-              this.$message.success(this.isEdit ? '编辑成功' : '新增成功');
-              this.dialogVisible = false;
-              this.fetchData();
-            } else {
-              this.$message.error(response.msg || '操作失败');
-            }
-          }).catch(error => {
-            console.error('操作失败:', error);
-            this.$message.error('操作失败');
-          });
+            this.$message.success(this.isEdit ? '编辑成功' : '新增成功');
+            this.dialogVisible = false;
+            this.fetchData();
+
+          }).finally(() => {
+            this.loading = false;
+          })
         } else {
           return false;
         }
