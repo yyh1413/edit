@@ -1,5 +1,5 @@
 <template>
-  <div class="details">
+  <div class="details" v-loading="fetchLoading">
     <div class="catalog">
       <Catalog :base64Ipynb="base64Ipynb" v-if="base64Ipynb" />
     </div>
@@ -43,6 +43,7 @@ export default {
   data() {
 
     return {
+      fetchLoading: false,
       loading: false,
       info: {},
       base64Ipynb: undefined,
@@ -63,6 +64,7 @@ export default {
   },
   methods: {
     getNoteBookDetails() {
+      this.fetchLoading = true
       this.http.get('/api/v1/scriptTemplate/detail', { id: this.notebookId }).then(v => {
         v.data.tags = v.data.tags.split(',')
         v.data.templateImageContent = v.data.templateImageContent && `data:image/png;base64,${v.data.templateImageContent}`
@@ -76,6 +78,8 @@ export default {
         this.base64Ipynb = formatData
         console.log('this.base64Ipynb', JSON.parse(JSON.stringify(this.base64Ipynb)));
 
+      }).finally(() => {
+        this.fetchLoading = false
       })
     },
     handleRunBefore() {

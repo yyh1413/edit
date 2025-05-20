@@ -1,5 +1,5 @@
 <template>
-  <div class="note_book_main">
+  <div class="note_book_main" v-loading="loading">
     <div v-if="!category">
       <NoteBook name="流程Notebook模板" :list="processList" />
       <NoteBook name="可视化Notebook模板" :list="visList" />
@@ -18,6 +18,7 @@ export default {
   components: { NoteBook },
   data() {
     return {
+      loading: false,
       processList: [],
       visList: [],
       toolList: [],
@@ -53,15 +54,19 @@ export default {
       })
     },
     getNoteBookList() {
+      this.loading = true
       this.http.get('/api/v1/scriptTemplate/getPage', { category: this.category }).then(v => {
         this.formatData(v.data)
         this.list = v.data
+      }).finally(() => {
+        this.loading = false
       })
 
     },
     getAllNoteBookList() {
       const pathList = ['流程', '可视化', '工具']
-
+      this.loading = true
+      let index = 0
       pathList.forEach(j => {
         this.http.get('/api/v1/scriptTemplate/getPage', { category: j }).then(v => {
           this.formatData(v.data)
@@ -72,7 +77,11 @@ export default {
           } else if (j == '工具') {
             this.toolList = v.data
           }
-
+        }).finally(() => {
+          index++
+          if (index == pathList.length) {
+            this.loading = false
+          }
         })
       })
     },

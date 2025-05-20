@@ -130,7 +130,6 @@ export default {
       ],
       resourceProfileOptions: [],
       tableData: [],
-      loading: false,
       pagination: {
         currentPage: 1,
         pageSize: 10,
