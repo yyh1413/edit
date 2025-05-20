@@ -67,12 +67,25 @@ export const adminRoutes = {
       path: "/template",
       component: () => import("@/views/index/index"),
       name: "Index",
-      children: [{
-        path: "/template",
-        component: () => import("@/views/template"),
-        name: "template-admin",
-        meta: { title: "模版管理", icon: "el-icon-s-open", menu: true },
-      },
+      children: [
+        {
+          path: "/template",
+          component: () => import("@/views/template"),
+          name: "template",
+          meta: { title: "模版管理", icon: "el-icon-s-open", menu: true },
+        },
+        {
+          path: "/userManage",
+          component: () => import("@/views/userManage"),
+          name: "userManage",
+          meta: { title: "用户权限管理", icon: "el-icon-s-open", menu: true },
+        },
+        {
+          path: "/imageManage",
+          component: () => import("@/views/imageManage"),
+          name: "imageManage",
+          meta: { title: "镜像资源管理", icon: "el-icon-s-open", menu: true },
+        },
       ]
     }
   ]
